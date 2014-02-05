@@ -22,7 +22,7 @@ namespace Snake
         {
             direction = Direction.Right;
 
-            cDrawer = new CDrawer(800, 800);
+            cDrawer = new CDrawer(600, 600);
             cDrawer.Scale = 20;
 
             _snakeBody = new List<SnakeSegment>();
@@ -41,6 +41,9 @@ namespace Snake
             {
                 cDrawer.AddCenteredEllipse(s._location._x, s._location._y, 1, 1, s._color);
             }
+
+            SnakeSegment head = _snakeBody.ElementAt(0);
+            cDrawer.AddCenteredEllipse(head._location._x, head._location._y, 1, 1, head._color);
         }
 
         public void Lengthen()
@@ -149,14 +152,46 @@ namespace Snake
             snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x + 1, snake._snakeBody.ElementAt(0)._location._y));
             snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x + 1, snake._snakeBody.ElementAt(0)._location._y));
             AddFoodPellet();
+            AddFoodPellet();
             timerSnake.Enabled = true;
-            
+
             Draw();
         }
 
         public void AddFoodPellet()
         {
             foodPellets.Add(new FoodPellet(random, snake));
+        }
+
+        public void CheckCollision()
+        {
+            //did the snake eat a food pellet?
+            for (int i = foodPellets.Count - 1; i >= 0; --i)
+            {
+                if (foodPellets[i]._location._x == snake._snakeBody.ElementAt(0)._location._x &&
+                    foodPellets[i]._location._y == snake._snakeBody.ElementAt(0)._location._y)
+                {
+                    //yes, a pellet has been eaten
+                    foodPellets.RemoveAt(i);
+                    snake.Lengthen();
+                    AddFoodPellet();
+                    i = -1;
+                }
+            }
+
+            //did the snake collide with itself?
+            SnakeSegment head = snake._snakeBody.ElementAt(0);
+            for (int i = 1; i < snake._snakeBody.Count; ++i)
+            {
+                if (head._location._x == snake._snakeBody.ElementAt(i)._location._x &&
+                    head._location._y == snake._snakeBody.ElementAt(i)._location._y)
+                {
+                    //yes, the snake has collided with itself
+                    timerSnake.Enabled = false;
+                    snake.cDrawer.AddText("GAME OVER", 40, Color.Tomato);
+                    i = snake._snakeBody.Count;
+                }
+            }
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -218,6 +253,8 @@ namespace Snake
             }
 
             Draw();
+
+            CheckCollision();
         }
     }
 }
