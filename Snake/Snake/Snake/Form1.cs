@@ -14,17 +14,15 @@ namespace Snake
 
     public struct Snake
     {
-        public CDrawer cDrawer;
         public List<SnakeSegment> _snakeBody;
-        public Direction direction;
+        public Direction _direction;
+        public CDrawer _cDrawer;
 
-        public Snake(Location location)
+        public Snake(Location location, CDrawer cDrawer)
         {
-            direction = Direction.Right;
-
-            cDrawer = new CDrawer(600, 600);
-            cDrawer.Scale = 20;
-
+            _direction = Direction.Right;
+            _cDrawer = cDrawer;
+            
             _snakeBody = new List<SnakeSegment>();
             SnakeSegment head = new SnakeSegment(location);
             head._color = Color.Yellow;
@@ -39,11 +37,11 @@ namespace Snake
         {
             foreach (SnakeSegment s in _snakeBody)
             {
-                cDrawer.AddCenteredEllipse(s._location._x, s._location._y, 1, 1, s._color);
+                _cDrawer.AddCenteredEllipse(s._location._x, s._location._y, 1, 1, s._color);
             }
 
             SnakeSegment head = _snakeBody.ElementAt(0);
-            cDrawer.AddCenteredEllipse(head._location._x, head._location._y, 1, 1, head._color);
+            _cDrawer.AddCenteredEllipse(head._location._x, head._location._y, 1, 1, head._color);
         }
 
         public void Lengthen()
@@ -125,7 +123,7 @@ namespace Snake
             do
             {
                 success = true;
-                location = new Location(random.Next(0, snake.cDrawer.ScaledWidth), random.Next(0, snake.cDrawer.ScaledHeight));
+                location = new Location(random.Next(0, snake._cDrawer.ScaledWidth), random.Next(0, snake._cDrawer.ScaledHeight));
                 foreach (SnakeSegment s in snake._snakeBody)
                     if (s._location._x == location._x && s._location._y == location._y)
                     {
@@ -141,73 +139,73 @@ namespace Snake
 
     public partial class Form1 : Form
     {
-        Snake snake;
-        Random random = new Random();
-        List<FoodPellet> foodPellets = new List<FoodPellet>();
+        Snake _snake;
+        Random _random = new Random();
+        List<FoodPellet> _foodPellets = new List<FoodPellet>();
+        public CDrawer _cDrawer;
+
 
         public Form1()
         {
             InitializeComponent();
-            snake = new Snake(new Location(5, 5));
-            snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x + 1, snake._snakeBody.ElementAt(0)._location._y));
-            snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x + 1, snake._snakeBody.ElementAt(0)._location._y));
-            AddFoodPellet();
-            AddFoodPellet();
-            timerSnake.Enabled = true;
 
+            _cDrawer = new CDrawer(600, 600);
+            _cDrawer.Scale = 20;
+
+            Reset();
             Draw();
         }
 
         public void AddFoodPellet()
         {
-            foodPellets.Add(new FoodPellet(random, snake));
+            _foodPellets.Add(new FoodPellet(_random, _snake));
         }
 
         public void CheckCollision()
         {
             //did the snake eat a food pellet?
-            for (int i = foodPellets.Count - 1; i >= 0; --i)
+            for (int i = _foodPellets.Count - 1; i >= 0; --i)
             {
-                if (foodPellets[i]._location._x == snake._snakeBody.ElementAt(0)._location._x &&
-                    foodPellets[i]._location._y == snake._snakeBody.ElementAt(0)._location._y)
+                if (_foodPellets[i]._location._x == _snake._snakeBody.ElementAt(0)._location._x &&
+                    _foodPellets[i]._location._y == _snake._snakeBody.ElementAt(0)._location._y)
                 {
                     //yes, a pellet has been eaten
-                    foodPellets.RemoveAt(i);
-                    snake.Lengthen();
+                    _foodPellets.RemoveAt(i);
+                    _snake.Lengthen();
                     AddFoodPellet();
                     i = -1;
                 }
             }
 
             //did the snake collide with itself?
-            SnakeSegment head = snake._snakeBody.ElementAt(0);
-            for (int i = 1; i < snake._snakeBody.Count; ++i)
+            SnakeSegment head = _snake._snakeBody.ElementAt(0);
+            for (int i = 1; i < _snake._snakeBody.Count; ++i)
             {
-                if (head._location._x == snake._snakeBody.ElementAt(i)._location._x &&
-                    head._location._y == snake._snakeBody.ElementAt(i)._location._y)
+                if (head._location._x == _snake._snakeBody.ElementAt(i)._location._x &&
+                    head._location._y == _snake._snakeBody.ElementAt(i)._location._y)
                 {
                     //yes, the snake has collided with itself
                     GameOver();
-                    i = snake._snakeBody.Count;
+                    i = _snake._snakeBody.Count;
                 }
             }
 
             //did the snake collide with the walls?
-            if (head._location._x >= snake.cDrawer.ScaledWidth ||
+            if (head._location._x >= _snake._cDrawer.ScaledWidth ||
                head._location._x < 0 ||
-               head._location._y >= snake.cDrawer.ScaledHeight ||
+               head._location._y >= _snake._cDrawer.ScaledHeight ||
                head._location._y < 0)
             {
                 GameOver();
             }
-
 
         }
 
         public void GameOver()
         {
             timerSnake.Enabled = false;
-            snake.cDrawer.AddText("GAME OVER", 40, Color.Tomato);
+            _cDrawer.AddText("GAME OVER\nScore: " + _snake._snakeBody.Count, 40, Color.Tomato);
+
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -215,19 +213,23 @@ namespace Snake
             switch (e.KeyCode)
             {
                 case Keys.Right:
-                    snake.direction = Direction.Right;
+                    if (_snake._direction != Direction.Left)
+                        _snake._direction = Direction.Right;
                     break;
                 case Keys.Left:
-                    snake.direction = Direction.Left;
+                    if (_snake._direction != Direction.Right)
+                        _snake._direction = Direction.Left;
                     break;
                 case Keys.Down:
-                    snake.direction = Direction.Down;
+                    if (_snake._direction != Direction.Up)
+                        _snake._direction = Direction.Down;
                     break;
                 case Keys.Up:
-                    snake.direction = Direction.Up;
+                    if (_snake._direction != Direction.Down)
+                        _snake._direction = Direction.Up;
                     break;
                 case Keys.Space:
-                    snake.Lengthen();
+                    _snake.Lengthen();
                     break;
                 case Keys.PageUp:
                     timerSnake.Interval += (timerSnake.Interval >= 1000) ? 0 : 25;
@@ -238,33 +240,47 @@ namespace Snake
                 case Keys.Escape:
                     Application.Exit();
                     break;
+                case Keys.Enter:
+                    Reset();
+                    break;
             }
 
         }
 
+        public void Reset()
+        {
+            _foodPellets.Clear();
+            _snake = new Snake(new Location(5, 5), _cDrawer);
+            _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x + 1, _snake._snakeBody.ElementAt(0)._location._y));
+            _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x + 1, _snake._snakeBody.ElementAt(0)._location._y));
+            AddFoodPellet();
+            AddFoodPellet();
+            timerSnake.Enabled = true;
+        }
+
         public void Draw()
         {
-            snake.cDrawer.Clear();
-            foreach (FoodPellet fp in foodPellets)
-                snake.cDrawer.AddCenteredEllipse(fp._location._x, fp._location._y, 1, 1, Color.Wheat);
-            snake.Draw();
+            _snake._cDrawer.Clear();
+            foreach (FoodPellet fp in _foodPellets)
+                _snake._cDrawer.AddCenteredEllipse(fp._location._x, fp._location._y, 1, 1, Color.Wheat);
+            _snake.Draw();
         }
 
         private void timerSnake_Tick(object sender, EventArgs e)
         {
-            switch (snake.direction)
+            switch (_snake._direction)
             {
                 case Direction.Right:
-                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x + 1, snake._snakeBody.ElementAt(0)._location._y));
+                    _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x + 1, _snake._snakeBody.ElementAt(0)._location._y));
                     break;
                 case Direction.Left:
-                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x - 1, snake._snakeBody.ElementAt(0)._location._y));
+                    _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x - 1, _snake._snakeBody.ElementAt(0)._location._y));
                     break;
                 case Direction.Down:
-                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x, snake._snakeBody.ElementAt(0)._location._y + 1));
+                    _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x, _snake._snakeBody.ElementAt(0)._location._y + 1));
                     break;
                 case Direction.Up:
-                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x, snake._snakeBody.ElementAt(0)._location._y - 1));
+                    _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x, _snake._snakeBody.ElementAt(0)._location._y - 1));
                     break;
             }
 
