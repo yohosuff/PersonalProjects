@@ -22,7 +22,7 @@ namespace Snake
         {
             _direction = Direction.Right;
             _cDrawer = cDrawer;
-            
+
             _snakeBody = new List<SnakeSegment>();
             SnakeSegment head = new SnakeSegment(location);
             head._color = Color.Yellow;
@@ -116,7 +116,7 @@ namespace Snake
     {
         public Location _location;
 
-        public FoodPellet(Random random, Snake snake)
+        public FoodPellet(Random random, Snake snake, List<FoodPellet> foodPellets)
         {
             Location location;
             bool success = false;
@@ -130,6 +130,13 @@ namespace Snake
                         success = false;
                         break;
                     }
+
+                foreach(FoodPellet fp in foodPellets)
+                    if (fp._location._x == location._x && fp._location._y == location._y)
+                    {
+                        success = false;
+                        break;
+                    }
             } while (!success);
 
             _location = location;
@@ -137,15 +144,15 @@ namespace Snake
         }
     }
 
-    public partial class Form1 : Form
+    public partial class mainForm : Form
     {
         Snake _snake;
         Random _random = new Random();
         List<FoodPellet> _foodPellets = new List<FoodPellet>();
         public CDrawer _cDrawer;
+        bool gameOver = false;
 
-
-        public Form1()
+        public mainForm()
         {
             InitializeComponent();
 
@@ -158,7 +165,7 @@ namespace Snake
 
         public void AddFoodPellet()
         {
-            _foodPellets.Add(new FoodPellet(_random, _snake));
+            _foodPellets.Add(new FoodPellet(_random, _snake, _foodPellets));
         }
 
         public void CheckCollision()
@@ -203,8 +210,9 @@ namespace Snake
 
         public void GameOver()
         {
+            gameOver = true;
             timerSnake.Enabled = false;
-            _cDrawer.AddText("GAME OVER\nScore: " + _snake._snakeBody.Count, 40, Color.Tomato);
+            _cDrawer.AddText("GAME OVER\nScore: " + _snake._snakeBody.Count + "\n\nPress <Enter> to\nplay again.", 40, Color.Tomato);
 
         }
 
@@ -241,7 +249,8 @@ namespace Snake
                     Application.Exit();
                     break;
                 case Keys.Enter:
-                    Reset();
+                    if (gameOver)
+                        Reset();
                     break;
             }
 
@@ -249,6 +258,7 @@ namespace Snake
 
         public void Reset()
         {
+            gameOver = false;
             _foodPellets.Clear();
             _snake = new Snake(new Location(5, 5), _cDrawer);
             _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x + 1, _snake._snakeBody.ElementAt(0)._location._y));
