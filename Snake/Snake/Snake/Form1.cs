@@ -187,11 +187,27 @@ namespace Snake
                     head._location._y == snake._snakeBody.ElementAt(i)._location._y)
                 {
                     //yes, the snake has collided with itself
-                    timerSnake.Enabled = false;
-                    snake.cDrawer.AddText("GAME OVER", 40, Color.Tomato);
+                    GameOver();
                     i = snake._snakeBody.Count;
                 }
             }
+
+            //did the snake collide with the walls?
+            if (head._location._x >= snake.cDrawer.ScaledWidth ||
+               head._location._x < 0 ||
+               head._location._y >= snake.cDrawer.ScaledHeight ||
+               head._location._y < 0)
+            {
+                GameOver();
+            }
+
+
+        }
+
+        public void GameOver()
+        {
+            timerSnake.Enabled = false;
+            snake.cDrawer.AddText("GAME OVER", 40, Color.Tomato);
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
