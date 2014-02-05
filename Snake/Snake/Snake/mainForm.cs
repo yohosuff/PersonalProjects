@@ -304,10 +304,10 @@ namespace Snake
                     _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x, _snake._snakeBody.ElementAt(0)._location._y - 1));
                     break;
             }
+            
+            CheckCollision();
 
             Draw();
-
-            CheckCollision();
         }
     }
 }
