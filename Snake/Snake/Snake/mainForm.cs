@@ -216,24 +216,35 @@ namespace Snake
 
         }
 
+        public bool SnakeHeadWasJustHere(Location location)
+        {
+            SnakeSegment neck = _snake._snakeBody.ElementAt(1);
+            if (neck._location._x == location._x && neck._location._y == location._y)
+                return true;
+            
+            return false;
+        }
+
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
+           SnakeSegment head = _snake._snakeBody.ElementAt(0);
+
             switch (e.KeyCode)
             {
                 case Keys.Right:
-                    if (_snake._direction != Direction.Left)
+                    if (!SnakeHeadWasJustHere(new Location(head._location._x + 1, head._location._y)))
                         _snake._direction = Direction.Right;
                     break;
                 case Keys.Left:
-                    if (_snake._direction != Direction.Right)
+                    if (!SnakeHeadWasJustHere(new Location(head._location._x - 1, head._location._y)))
                         _snake._direction = Direction.Left;
                     break;
                 case Keys.Down:
-                    if (_snake._direction != Direction.Up)
+                    if (!SnakeHeadWasJustHere(new Location(head._location._x, head._location._y + 1)))
                         _snake._direction = Direction.Down;
                     break;
                 case Keys.Up:
-                    if (_snake._direction != Direction.Down)
+                    if (!SnakeHeadWasJustHere(new Location(head._location._x, head._location._y - 1)))
                         _snake._direction = Direction.Up;
                     break;
                 case Keys.Space:
