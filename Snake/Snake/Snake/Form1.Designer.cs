@@ -28,7 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            this.timerSnake = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
+            // 
+            // timerSnake
+            // 
+            this.timerSnake.Interval = 150;
+            this.timerSnake.Tick += new System.EventHandler(this.timerSnake_Tick);
             // 
             // Form1
             // 
@@ -43,6 +50,8 @@
         }
 
         #endregion
+
+        private System.Windows.Forms.Timer timerSnake;
     }
 }
 

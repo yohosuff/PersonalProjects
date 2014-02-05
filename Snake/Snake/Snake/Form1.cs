@@ -10,28 +10,36 @@ using GDIDrawer;
 
 namespace Snake
 {
-    struct Snake
+    public enum Direction { Up, Down, Left, Right };
+
+    public struct Snake
     {
         public CDrawer cDrawer;
         public List<SnakeSegment> _snakeBody;
+        public Direction direction;
 
         public Snake(Location location)
         {
+            direction = Direction.Right;
+
             cDrawer = new CDrawer(800, 800);
             cDrawer.Scale = 20;
 
             _snakeBody = new List<SnakeSegment>();
-            _snakeBody.Add(new SnakeSegment(location));
+            SnakeSegment head = new SnakeSegment(location);
+            head._color = Color.Yellow;
+            _snakeBody.Add(head);
             Lengthen();
             Lengthen();
+
+
         }
 
         public void Draw()
         {
-            cDrawer.Clear();
-            foreach(SnakeSegment s in _snakeBody)
+            foreach (SnakeSegment s in _snakeBody)
             {
-                cDrawer.AddCenteredEllipse(s._location._x, s._location._y, 1, 1, Color.Red);
+                cDrawer.AddCenteredEllipse(s._location._x, s._location._y, 1, 1, s._color);
             }
         }
 
@@ -45,26 +53,28 @@ namespace Snake
         public void MoveHead(Location newLocation)
         {
             _snakeBody[0] = _snakeBody[0].Move(newLocation);
-            
+
             for (int i = 1; i < _snakeBody.Count; ++i)
             {
                 _snakeBody[i] = _snakeBody[i].Move(_snakeBody.ElementAt(i - 1)._lastLocation);
             }
         }
-        
+
     }
 
-    struct SnakeSegment
+    public struct SnakeSegment
     {
         public bool _nulled;
         public Location _location;
         public Location _lastLocation;
-        
+        public Color _color;
+
         public SnakeSegment(Location location)
         {
             _nulled = false;
             _location = location;
             _lastLocation = new Location(location);
+            _color = Color.Red;
         }
 
         public SnakeSegment(bool nulled)
@@ -72,6 +82,7 @@ namespace Snake
             _nulled = true;
             _location = new Location();
             _lastLocation = new Location();
+            _color = Color.Red;
         }
 
         public SnakeSegment Move(Location newLocation)
@@ -82,7 +93,7 @@ namespace Snake
         }
     }
 
-    struct Location
+    public struct Location
     {
         public int _x;
         public int _y;
@@ -99,16 +110,53 @@ namespace Snake
             _y = location._y;
         }
     }
-    
+
+    public struct FoodPellet
+    {
+        public Location _location;
+
+        public FoodPellet(Random random, Snake snake)
+        {
+            Location location;
+            bool success = false;
+            do
+            {
+                success = true;
+                location = new Location(random.Next(0, snake.cDrawer.ScaledWidth), random.Next(0, snake.cDrawer.ScaledHeight));
+                foreach (SnakeSegment s in snake._snakeBody)
+                    if (s._location._x == location._x && s._location._y == location._y)
+                    {
+                        success = false;
+                        break;
+                    }
+            } while (!success);
+
+            _location = location;
+
+        }
+    }
+
     public partial class Form1 : Form
     {
         Snake snake;
-        
+        Random random = new Random();
+        List<FoodPellet> foodPellets = new List<FoodPellet>();
+
         public Form1()
         {
             InitializeComponent();
-            snake = new Snake(new Location(5,5));
-            snake.Draw();
+            snake = new Snake(new Location(5, 5));
+            snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x + 1, snake._snakeBody.ElementAt(0)._location._y));
+            snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x + 1, snake._snakeBody.ElementAt(0)._location._y));
+            AddFoodPellet();
+            timerSnake.Enabled = true;
+            
+            Draw();
+        }
+
+        public void AddFoodPellet()
+        {
+            foodPellets.Add(new FoodPellet(random, snake));
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -116,28 +164,60 @@ namespace Snake
             switch (e.KeyCode)
             {
                 case Keys.Right:
-                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x + 1, snake._snakeBody.ElementAt(0)._location._y));
+                    snake.direction = Direction.Right;
                     break;
                 case Keys.Left:
-                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x - 1, snake._snakeBody.ElementAt(0)._location._y));
+                    snake.direction = Direction.Left;
                     break;
                 case Keys.Down:
-                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x, snake._snakeBody.ElementAt(0)._location._y + 1));
+                    snake.direction = Direction.Down;
                     break;
                 case Keys.Up:
-                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x, snake._snakeBody.ElementAt(0)._location._y - 1));
+                    snake.direction = Direction.Up;
                     break;
                 case Keys.Space:
                     snake.Lengthen();
+                    break;
+                case Keys.PageUp:
+                    timerSnake.Interval += (timerSnake.Interval >= 1000) ? 0 : 25;
+                    break;
+                case Keys.PageDown:
+                    timerSnake.Interval -= (timerSnake.Interval <= 25) ? 0 : 25;
                     break;
                 case Keys.Escape:
                     Application.Exit();
                     break;
             }
 
+        }
+
+        public void Draw()
+        {
+            snake.cDrawer.Clear();
+            foreach (FoodPellet fp in foodPellets)
+                snake.cDrawer.AddCenteredEllipse(fp._location._x, fp._location._y, 1, 1, Color.Wheat);
             snake.Draw();
+        }
 
+        private void timerSnake_Tick(object sender, EventArgs e)
+        {
+            switch (snake.direction)
+            {
+                case Direction.Right:
+                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x + 1, snake._snakeBody.ElementAt(0)._location._y));
+                    break;
+                case Direction.Left:
+                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x - 1, snake._snakeBody.ElementAt(0)._location._y));
+                    break;
+                case Direction.Down:
+                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x, snake._snakeBody.ElementAt(0)._location._y + 1));
+                    break;
+                case Direction.Up:
+                    snake.MoveHead(new Location(snake._snakeBody.ElementAt(0)._location._x, snake._snakeBody.ElementAt(0)._location._y - 1));
+                    break;
+            }
 
+            Draw();
         }
     }
 }
