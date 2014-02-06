@@ -12,12 +12,12 @@ namespace Snake
 {
     public enum Direction { Up, Down, Left, Right };
 
-    struct Portal
+    public struct Portal
     {
         public Location _A;
         public Location _B;
         public bool teleported;
-        
+
         public Portal(Location A, Location B)
         {
             _A = A;
@@ -43,7 +43,7 @@ namespace Snake
             _snakeBody.Add(head);
             Lengthen();
             Lengthen();
-            
+
         }
 
         public void Draw()
@@ -129,7 +129,7 @@ namespace Snake
     {
         public Location _location;
 
-        public FoodPellet(Random random, Snake snake, List<FoodPellet> foodPellets)
+        public FoodPellet(Random random, Snake snake, List<FoodPellet> foodPellets, List<Portal> portals)
         {
             Location location;
             bool success = false;
@@ -144,12 +144,21 @@ namespace Snake
                         break;
                     }
 
-                foreach(FoodPellet fp in foodPellets)
+                foreach (FoodPellet fp in foodPellets)
                     if (fp._location._x == location._x && fp._location._y == location._y)
                     {
                         success = false;
                         break;
                     }
+
+                foreach(Portal portal in portals)
+                    if (portal._A._x == location._x && portal._A._y == location._y
+                        || portal._B._x == location._x && portal._B._y == location._y)
+                    {
+                        success = false;
+                        break;
+                    }
+
             } while (!success);
 
             _location = location;
@@ -163,16 +172,16 @@ namespace Snake
         Random _random = new Random();
         List<FoodPellet> _foodPellets = new List<FoodPellet>();
         public CDrawer _cDrawer;
-        bool gameOver = false;
-        List<Portal> portals = new List<Portal>();
-        bool paused = false;
+        bool _gameOver = false;
+        List<Portal> _portals = new List<Portal>();
+        bool _paused = false;
 
         public mainForm()
         {
             InitializeComponent();
 
-            portals.Add(new Portal(new Location(0, 0), new Location(15, 15)));
-            portals.Add(new Portal(new Location(5, 5), new Location(25, 25)));
+            _portals.Add(new Portal(new Location(0, 0), new Location(15, 15)));
+            _portals.Add(new Portal(new Location(5, 5), new Location(25, 25)));
 
             _cDrawer = new CDrawer(600, 600);
             _cDrawer.Scale = 20;
@@ -181,46 +190,47 @@ namespace Snake
             Draw();
         }
 
-        public void AddFoodPellet()
+        public void AddFoodPellet(int amount = 1)
         {
-            _foodPellets.Add(new FoodPellet(_random, _snake, _foodPellets));
+            for (int i = 0; i < amount; ++i)
+                if (_foodPellets.Count < _cDrawer.ScaledWidth * _cDrawer.ScaledHeight - _snake._snakeBody.Count - _portals.Count * 2)
+                    _foodPellets.Add(new FoodPellet(_random, _snake, _foodPellets, _portals));
         }
 
         public void CheckCollision()
         {
             SnakeSegment head = _snake._snakeBody.ElementAt(0);
-            
+
             //did the snake enter a portal?
-            for (int i = 0; i < portals.Count; ++i)
+            for (int i = 0; i < _portals.Count; ++i)
             {
-                if (head._lastLocation._x == portals[i]._A._x && head._lastLocation._y == portals[i]._A._y)
+                if (head._lastLocation._x == _portals[i]._A._x && head._lastLocation._y == _portals[i]._A._y)
                 {
-                    if (!portals[i].teleported)
+                    if (!_portals[i].teleported)
                     {
-                        _snake._snakeBody[0] = _snake._snakeBody[0].Move(portals[i]._B);
-                        Portal portal = new Portal(portals[i]._A, portals[i]._B);
+                        _snake._snakeBody[0] = _snake._snakeBody[0].Move(_portals[i]._B);
+                        Portal portal = new Portal(_portals[i]._A, _portals[i]._B);
                         portal.teleported = true;
-                        portals[i] = portal;
+                        _portals[i] = portal;
                         return;
                     }
 
                 }
-                else if (head._lastLocation._x == portals[i]._B._x && head._lastLocation._y == portals[i]._B._y)
+                else if (head._lastLocation._x == _portals[i]._B._x && head._lastLocation._y == _portals[i]._B._y)
                 {
-                    if (!portals[i].teleported)
+                    if (!_portals[i].teleported)
                     {
-                        _snake._snakeBody[0] = _snake._snakeBody[0].Move(portals[i]._A);
-                        Portal portal = new Portal(portals[i]._A, portals[i]._B);
+                        _snake._snakeBody[0] = _snake._snakeBody[0].Move(_portals[i]._A);
+                        Portal portal = new Portal(_portals[i]._A, _portals[i]._B);
                         portal.teleported = true;
-                        portals[i] = portal;
+                        _portals[i] = portal;
                         return;
                     }
                 }
 
-                portals[i] = new Portal(portals[i]._A, portals[i]._B);
+                _portals[i] = new Portal(_portals[i]._A, _portals[i]._B);
             }
 
-            
             //did the snake eat a food pellet?
             for (int i = _foodPellets.Count - 1; i >= 0; --i)
             {
@@ -242,7 +252,7 @@ namespace Snake
                     head._location._y == _snake._snakeBody.ElementAt(i)._location._y)
                 {
                     //yes, the snake has collided with itself
-                    gameOver = true;
+                    _gameOver = true;
                     return;
                 }
             }
@@ -253,7 +263,7 @@ namespace Snake
                head._location._y >= _snake._cDrawer.ScaledHeight ||
                head._location._y < 0)
             {
-                gameOver = true;
+                _gameOver = true;
                 return;
             }
 
@@ -271,13 +281,13 @@ namespace Snake
             SnakeSegment neck = _snake._snakeBody.ElementAt(1);
             if (neck._location._x == location._x && neck._location._y == location._y)
                 return true;
-            
+
             return false;
         }
 
         private void mainForm_KeyDown(object sender, KeyEventArgs e)
         {
-           SnakeSegment head = _snake._snakeBody.ElementAt(0);
+            SnakeSegment head = _snake._snakeBody.ElementAt(0);
 
             switch (e.KeyCode)
             {
@@ -310,36 +320,41 @@ namespace Snake
                     Application.Exit();
                     break;
                 case Keys.Enter:
-                    if (gameOver)
+                    if (_gameOver)
                         Reset();
                     break;
                 case Keys.P:
-                    if (paused)
+                    if (_paused)
                     {
-                        paused = false;
+                        _paused = false;
                         timerSnake.Enabled = true;
                     }
                     else
                     {
-                        paused = true;
+                        _paused = true;
                         timerSnake.Enabled = false;
                         _cDrawer.AddText("Paused", 40, Color.Tomato);
                     }
                     break;
-                
+                case Keys.F:
+                    if (e.Modifiers == Keys.Shift)
+                        AddFoodPellet(1000);
+                    else
+                        AddFoodPellet();
+                    break;
+
             }
 
         }
 
         public void Reset()
         {
-            gameOver = false;
+            _gameOver = false;
             _foodPellets.Clear();
             _snake = new Snake(new Location(5, 5), _cDrawer);
             _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x + 1, _snake._snakeBody.ElementAt(0)._location._y));
             _snake.MoveHead(new Location(_snake._snakeBody.ElementAt(0)._location._x + 1, _snake._snakeBody.ElementAt(0)._location._y));
-            AddFoodPellet();
-            AddFoodPellet();
+            AddFoodPellet(2);
             timerSnake.Enabled = true;
         }
 
@@ -347,20 +362,23 @@ namespace Snake
         {
             _snake._cDrawer.Clear();
 
-            foreach (FoodPellet fp in _foodPellets)
-                _snake._cDrawer.AddCenteredEllipse(fp._location._x, fp._location._y, 1, 1, Color.Wheat);
-
-            foreach (Portal portal in portals)
+            
+            foreach (Portal portal in _portals)
             {
                 _snake._cDrawer.AddCenteredRectangle(portal._A._x, portal._A._y, 1, 1, Color.Blue);
                 _snake._cDrawer.AddCenteredRectangle(portal._B._x, portal._B._y, 1, 1, Color.Blue);
             }
+
             _snake.Draw();
+
+            foreach (FoodPellet fp in _foodPellets)
+                _snake._cDrawer.AddCenteredEllipse(fp._location._x, fp._location._y, 1, 1, Color.Wheat);
+
         }
 
         public void CheckGameOver()
         {
-            if (gameOver)
+            if (_gameOver)
                 GameOver();
         }
 
@@ -383,11 +401,11 @@ namespace Snake
             }
 
             CheckCollision();
-            if (!gameOver)
+            if (!_gameOver)
                 Draw();
             else
                 GameOver();
-            
+
         }
     }
 }
