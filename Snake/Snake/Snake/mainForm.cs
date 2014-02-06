@@ -165,6 +165,7 @@ namespace Snake
         public CDrawer _cDrawer;
         bool gameOver = false;
         List<Portal> portals = new List<Portal>();
+        bool paused = false;
 
         public mainForm()
         {
@@ -274,7 +275,7 @@ namespace Snake
             return false;
         }
 
-        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        private void mainForm_KeyDown(object sender, KeyEventArgs e)
         {
            SnakeSegment head = _snake._snakeBody.ElementAt(0);
 
@@ -312,6 +313,20 @@ namespace Snake
                     if (gameOver)
                         Reset();
                     break;
+                case Keys.P:
+                    if (paused)
+                    {
+                        paused = false;
+                        timerSnake.Enabled = true;
+                    }
+                    else
+                    {
+                        paused = true;
+                        timerSnake.Enabled = false;
+                        _cDrawer.AddText("Paused", 40, Color.Tomato);
+                    }
+                    break;
+                
             }
 
         }
