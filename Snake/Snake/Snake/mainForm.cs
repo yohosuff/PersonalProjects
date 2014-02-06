@@ -192,7 +192,7 @@ namespace Snake
                     head._location._y == _snake._snakeBody.ElementAt(i)._location._y)
                 {
                     //yes, the snake has collided with itself
-                    GameOver();
+                    gameOver = true;
                     i = _snake._snakeBody.Count;
                 }
             }
@@ -203,14 +203,13 @@ namespace Snake
                head._location._y >= _snake._cDrawer.ScaledHeight ||
                head._location._y < 0)
             {
-                GameOver();
+                gameOver = true;
             }
 
         }
 
         public void GameOver()
         {
-            gameOver = true;
             timerSnake.Enabled = false;
             _cDrawer.AddText("GAME OVER\nScore: " + _snake._snakeBody.Count + "\n\nPress <Enter> to\nplay again.", 40, Color.Tomato);
 
@@ -287,6 +286,12 @@ namespace Snake
             _snake.Draw();
         }
 
+        public void CheckGameOver()
+        {
+            if (gameOver)
+                GameOver();
+        }
+
         private void timerSnake_Tick(object sender, EventArgs e)
         {
             switch (_snake._direction)
@@ -305,9 +310,12 @@ namespace Snake
                     break;
             }
 
-            Draw();
-
             CheckCollision();
+            if (!gameOver)
+                Draw();
+            else
+                GameOver();
+            
         }
     }
 }
