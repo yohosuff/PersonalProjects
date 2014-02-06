@@ -12,6 +12,20 @@ namespace Snake
 {
     public enum Direction { Up, Down, Left, Right };
 
+    struct Portal
+    {
+        public Location _A;
+        public Location _B;
+        public bool teleported;
+        
+        public Portal(Location A, Location B)
+        {
+            _A = A;
+            _B = B;
+            teleported = false;
+        }
+    }
+
     public struct Snake
     {
         public List<SnakeSegment> _snakeBody;
@@ -29,8 +43,7 @@ namespace Snake
             _snakeBody.Add(head);
             Lengthen();
             Lengthen();
-
-
+            
         }
 
         public void Draw()
@@ -151,10 +164,14 @@ namespace Snake
         List<FoodPellet> _foodPellets = new List<FoodPellet>();
         public CDrawer _cDrawer;
         bool gameOver = false;
+        List<Portal> portals = new List<Portal>();
 
         public mainForm()
         {
             InitializeComponent();
+
+            portals.Add(new Portal(new Location(0, 0), new Location(15, 15)));
+            portals.Add(new Portal(new Location(5, 5), new Location(25, 25)));
 
             _cDrawer = new CDrawer(600, 600);
             _cDrawer.Scale = 20;
@@ -170,6 +187,39 @@ namespace Snake
 
         public void CheckCollision()
         {
+            SnakeSegment head = _snake._snakeBody.ElementAt(0);
+            
+            //did the snake enter a portal?
+            for (int i = 0; i < portals.Count; ++i)
+            {
+                if (head._lastLocation._x == portals[i]._A._x && head._lastLocation._y == portals[i]._A._y)
+                {
+                    if (!portals[i].teleported)
+                    {
+                        _snake._snakeBody[0] = _snake._snakeBody[0].Move(portals[i]._B);
+                        Portal portal = new Portal(portals[i]._A, portals[i]._B);
+                        portal.teleported = true;
+                        portals[i] = portal;
+                        return;
+                    }
+
+                }
+                else if (head._lastLocation._x == portals[i]._B._x && head._lastLocation._y == portals[i]._B._y)
+                {
+                    if (!portals[i].teleported)
+                    {
+                        _snake._snakeBody[0] = _snake._snakeBody[0].Move(portals[i]._A);
+                        Portal portal = new Portal(portals[i]._A, portals[i]._B);
+                        portal.teleported = true;
+                        portals[i] = portal;
+                        return;
+                    }
+                }
+
+                portals[i] = new Portal(portals[i]._A, portals[i]._B);
+            }
+
+            
             //did the snake eat a food pellet?
             for (int i = _foodPellets.Count - 1; i >= 0; --i)
             {
@@ -185,7 +235,6 @@ namespace Snake
             }
 
             //did the snake collide with itself?
-            SnakeSegment head = _snake._snakeBody.ElementAt(0);
             for (int i = 1; i < _snake._snakeBody.Count; ++i)
             {
                 if (head._location._x == _snake._snakeBody.ElementAt(i)._location._x &&
@@ -193,7 +242,7 @@ namespace Snake
                 {
                     //yes, the snake has collided with itself
                     gameOver = true;
-                    i = _snake._snakeBody.Count;
+                    return;
                 }
             }
 
@@ -204,6 +253,7 @@ namespace Snake
                head._location._y < 0)
             {
                 gameOver = true;
+                return;
             }
 
         }
@@ -281,8 +331,15 @@ namespace Snake
         public void Draw()
         {
             _snake._cDrawer.Clear();
+
             foreach (FoodPellet fp in _foodPellets)
                 _snake._cDrawer.AddCenteredEllipse(fp._location._x, fp._location._y, 1, 1, Color.Wheat);
+
+            foreach (Portal portal in portals)
+            {
+                _snake._cDrawer.AddCenteredRectangle(portal._A._x, portal._A._y, 1, 1, Color.Blue);
+                _snake._cDrawer.AddCenteredRectangle(portal._B._x, portal._B._y, 1, 1, Color.Blue);
+            }
             _snake.Draw();
         }
 
