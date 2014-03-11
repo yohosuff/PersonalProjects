@@ -19,9 +19,13 @@ namespace MvcTutorial
             routes.MapRoute(
                 "Default", // Route name
                 "{controller}/{action}/{id}", // URL with parameters
-                new { controller = "Home", action = "Index", id = UrlParameter.Optional } // Parameter defaults
+                new { controller = "HelloWorld", action = "Index", id = UrlParameter.Optional } // Parameter defaults
             );
 
+            routes.MapRoute(
+                name: "Hello",
+                url: "{controller}/{action}/{name}/{id}"
+            );
         }
 
         protected void Application_Start()
