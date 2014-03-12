@@ -1,0 +1,17 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Hello_World\Resources\values\Strings.xml">
+    <Files>
+      <File FileName="Hello_World\MainActivity.cs" Line="22" Column="64" />
+      <File FileName="Hello_World\obj\Debug\android\AndroidManifest.xml" Line="2" Column="154" />
+      <File FileName="Hello_World\Properties\AndroidManifest.xml" Line="5" Column="12" />
+      <File FileName="Hello_World\Resources\values\Strings.xml" Line="6" Column="2" />
+      <File FileName="Hello_World\Resources\layout\Main.axml" Line="12" Column="34" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.ItemProperties.Hello__World AndroidDeviceId-Debug="192.168.13.101:5555" MonoForAntroid.PreferredDevice="3.7&quot; WVGA (Nexus One)" />
+</Properties>
