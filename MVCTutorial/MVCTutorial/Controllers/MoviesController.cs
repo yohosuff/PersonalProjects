@@ -55,6 +55,7 @@ namespace MVCTutorial.Controllers
         }
 
         // GET: /Movies/Edit/5
+        [HttpGet] //implicit; not needed to be written explicitly
         public ActionResult Edit(int? id)
         {
             if (id == null)
